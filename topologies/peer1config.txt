@@ -1,0 +1,3 @@
+peer1.port=4000
+peer1.next=2,3
+peer1.serverport=50000

@@ -1,0 +1,3 @@
+peer4.port=4003
+peer4.next=1,2
+peer4.serverport=50004
