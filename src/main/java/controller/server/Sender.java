@@ -1,35 +1,7 @@
+package controller.server;
+
 import java.io.*;
-import java.net.*;
-
-public class Server extends Thread {
-
-    private int portno;
-    private String FileDirectory;
-    private ServerSocket serverSocket;
-    private Socket socket;
-
-    Server(int portno, String FileDirectory) {
-        this.portno = portno;
-        this.FileDirectory = FileDirectory;
-    }
-
-    public void run() {
-
-        try {
-            serverSocket = new ServerSocket(portno);
-        } catch(IOException io) {
-            System.out.println("Can't setup server on this port number. ");
-        }
-
-        try {
-            socket = serverSocket.accept();
-        } catch(IOException io) {
-            System.out.println("Can't accept client connection. ");
-        }
-
-        new Sender(socket, FileDirectory).start();
-    }
-}
+import java.net.Socket;
 
 class Sender extends Thread {
 
@@ -50,7 +22,7 @@ class Sender extends Thread {
         OutputStream out = null;
 
         try {
-            is = socket.getInputStream();            //Connecting Client acting as a server to the file requesting Client
+            is = socket.getInputStream();            //Connecting controller.client.Client acting as a controller.server to the file requesting controller.client.Client
             ois = new ObjectInputStream(is);
             filename = (String) ois.readObject();                    //Filename to be downloaded
         } catch (Exception ex){
@@ -81,5 +53,4 @@ class Sender extends Thread {
             e.printStackTrace();
         }
     }
-
 }

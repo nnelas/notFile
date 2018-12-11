@@ -3,8 +3,10 @@ package utils;
 public class GlobalConfig {
 
     public static final String SERVER_NAME = "localhost";
+    public static final String CONFIG_FOLDER = "config/";
+    public static final String USER_FILES = "user-files";
 
-    public final static void clearConsole() {
+    public static void clearConsole() {
         try {
             final String os = System.getProperty("os.name");
 

@@ -1,3 +1,5 @@
+package controller.notFile;
+
 import utils.MessageFormat;
 
 import java.net.Socket;
@@ -35,11 +37,8 @@ public class ConnectionThread extends Thread {
             InputStream is = socket.getInputStream();
             ObjectInputStream ois = new ObjectInputStream(is);
 
-            MessageFormat MF = new MessageFormat();
-            MF.fname = filetodownload;							//writing the data to be serialized and send to the server thread
-            MF.msgId = msgid;
-            MF.fromPeerId = frompeer_id;
-            MF.TTL_value = TTL_value;
+            //writing the data to be serialized and send to the controller.server thread
+            MessageFormat MF = new MessageFormat(filetodownload, msgid, frompeer_id, TTL_value);
             oos.writeObject(MF);
 
             peersArray = (int[])ois.readObject();
