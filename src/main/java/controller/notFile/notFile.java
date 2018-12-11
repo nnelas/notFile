@@ -156,23 +156,35 @@ public class notFile {
         }
 
         int[] peerswithfiles; //part on how to send data from the ConnectingPeer
-
-        System.out.println("\nPeers containing the file are: ");
+        List<Integer> allPeersWithFile = new ArrayList<Integer>();
 
         for (ConnectionThread peer : peers) {
 
             //Reading the list of controller.client threads which contains files
             peerswithfiles = ((ConnectionThread) peer).getarray();
 
-            for (int peerswithfile : peerswithfiles) {
-                if (peerswithfile == 0) {
-                    break;
+            if (peerswithfiles.length > 0) {
+                for (int availablePeer : peerswithfiles) {
+                    if (availablePeer != 0) {
+                        allPeersWithFile.add(availablePeer);
+                    }
                 }
-
-                System.out.println(peerswithfile);
             }
         }
 
+        if (!allPeersWithFile.isEmpty()) {
+            System.out.println("\nPeers containing the file are: ");
+            for (int availablePeers : allPeersWithFile) {
+                System.out.println("> " + availablePeers);
+            }
+            downloadFile(fileToSearch);
+        } else {
+            System.out.println("No one has this file. Sorry. ");
+            mainMenu();
+        }
+    }
+
+    private void downloadFile (String filename){
         System.out.println("\nDo you wish to download this file? (y/N)");
         String ans = scanner.nextLine();
         if (ans.equalsIgnoreCase("y")) {
@@ -180,15 +192,10 @@ public class notFile {
 
             int peerFrom = scanner.nextInt();
             int portFrom = Integer.parseInt(properties.getProperty("peer" + peerFrom + ".serverport"));
-            downloadFile(portFrom, fileToSearch, filesDir);
-        } else if (ans.equalsIgnoreCase("n")){
-            mainMenu();
-        }
-    }
 
-    private void downloadFile (int portFrom, String filename, String filesDir){
-        Receiver receiver = new Receiver(portFrom, filename, filesDir);
-        receiver.run();
+            Receiver receiver = new Receiver(portFrom, filename, filesDir);
+            receiver.run();
+        }
 
         mainMenu();
     }
