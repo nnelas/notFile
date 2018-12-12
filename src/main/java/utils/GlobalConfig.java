@@ -5,6 +5,7 @@ public class GlobalConfig {
     public static final String SERVER_NAME = "localhost";
     public static final String CONFIG_FOLDER = "config/";
     public static final String USER_FILES = "user-files";
+    public static final String WITH_DELIMITER = "((?<=%1$s)|(?=%1$s))";
 
     public static void clearConsole() {
         try {

@@ -12,16 +12,16 @@ public class ConnectionThread extends Thread {
 
     private int portofconnection;
     private int peertoconnect;
-    private String filetodownload;
+    private String query;
     private int[] peersArray;
     private String msgid;
     private int frompeer_id;
     private int TTL_value;
 
-    public ConnectionThread(int portofconnection, int peertoconnect, String filetodownload, String msgid, int frompeer_id, int TTL_value) {
+    public ConnectionThread(int portofconnection, int peertoconnect, String query, String msgid, int frompeer_id, int TTL_value) {
         this.portofconnection = portofconnection;
         this.peertoconnect = peertoconnect;
-        this.filetodownload = filetodownload;
+        this.query = query;
         this.msgid = msgid;
         this.frompeer_id = frompeer_id;
         this.TTL_value = TTL_value;
@@ -38,7 +38,7 @@ public class ConnectionThread extends Thread {
             ObjectInputStream ois = new ObjectInputStream(is);
 
             //writing the data to be serialized and send to the controller.server thread
-            MessageFormat MF = new MessageFormat(filetodownload, msgid, frompeer_id, TTL_value);
+            MessageFormat MF = new MessageFormat(query, msgid, frompeer_id, TTL_value);
             oos.writeObject(MF);
 
             peersArray = (int[])ois.readObject();

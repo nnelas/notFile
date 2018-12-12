@@ -11,6 +11,9 @@ import java.util.Properties;
 import java.io.*;
 import java.util.*;
 
+import static utils.GlobalConfig.CONFIG_FOLDER;
+import static utils.GlobalConfig.USER_FILES;
+
 public class notFile {
 
     private static String propertiesFile;
@@ -46,17 +49,27 @@ public class notFile {
         System.out.println("1 - Search for a File");
         System.out.println("1.1 - Download a File");
         System.out.println("2 - Insert a File");
-        System.out.println("3 - Info\n");
+        System.out.println("3 - List all my files");
+        System.out.println("4 - Info\n");
 
         scanner = new Scanner(System.in);
         int choice = scanner.nextInt();
 
         switch (choice) {
             case 1:
-                System.out.println("\nEnter the DataSet to be searched: ");
+                System.out.println("\nYou can search a DataSet by: ");
+                System.out.println("> name, ");
+                System.out.println("> duration, ");
+                System.out.println("> number of participants (numParticipants), ");
+                System.out.println("> participants type (participantsType), ");
+                System.out.println("> number of records (numRecords), ");
+                System.out.println("> license");
+                System.out.println("\n\nFor searching by one of these attributes, please query your input in this format: ");
+                System.out.println("\n\tduration>10, numParticipants=9, numRecords<9");
+                System.out.println("\nAny attribute that is not represented, will not be considered. ");
                 scanner.nextLine();
-                String fileToSearch = scanner.nextLine();
-                searchFile(fileToSearch);
+                String query = scanner.nextLine();
+                searchFile(query);
                 break;
             case 2:
                 //TODO: files can be everywhere. change insert file dir
@@ -91,6 +104,9 @@ public class notFile {
                 }
                 break;
             case 3:
+                seeAllMyFiles();
+                break;
+            case 4:
                 systemInfo();
                 break;
             case 0:
@@ -124,11 +140,13 @@ public class notFile {
         }
     }
 
+
     private void searchFile (String fileToSearch){
         ++count;
         String msgID = peerID + "." + count;
         String[] neighbours = properties.getProperty("peer" + peerID + ".next").split(","); 	//Creating a controller.client thread for every neighbouring peer
         int TTL_Value = neighbours.length;
+        System.out.println(fileToSearch);
 
         ArrayList<Thread> thread = new ArrayList<Thread>();
         ArrayList<ConnectionThread> peers = new ArrayList<ConnectionThread>();		//To store all controller.client threads
@@ -137,7 +155,7 @@ public class notFile {
             int neighPort = Integer.parseInt(properties.getProperty("peer" + neighbour + ".port"));		// get neighbour port from config file
             int neighID = Integer.parseInt(neighbour);
 
-            ConnectionThread cp = new ConnectionThread(neighPort, neighID, fileToSearch, msgID, peerID, TTL_Value);
+                ConnectionThread cp = new ConnectionThread(neighPort, neighID, fileToSearch, msgID, peerID, TTL_Value);
 
             Thread t = new Thread(cp);
             t.start();
@@ -177,6 +195,7 @@ public class notFile {
             for (int availablePeers : allPeersWithFile) {
                 System.out.println("> " + availablePeers);
             }
+
             downloadFile(fileToSearch);
         } else {
             System.out.println("No one has this file. Sorry. ");
@@ -206,6 +225,45 @@ public class notFile {
         DataSet dataSet = new DataSet(filename, dataSetDuration, numParticipants, participantsType, numRecords, license);
         InsertFile insertFile = new InsertFile(peerID, dataSet);
         insertFile.run();
+
+        mainMenu();
+    }
+
+    private void seeAllMyFiles (){
+        String[] files = null;
+        File file = new File(CONFIG_FOLDER + "Peer" + peerID + "//" + USER_FILES);
+        BufferedReader reader = null;
+        String csvSplitBy = ",";
+        String line = "";
+
+        try {
+            reader = new BufferedReader(new FileReader(file));
+
+            while ((line = reader.readLine()) != null) {
+                // use comma as separator
+                files = line.split(csvSplitBy);
+
+                System.out.println("File [name = " + files[0] +
+                        ", duration = " + files[1] +
+                        ", numParticipants = " + files[2] +
+                        ", participantsType = " + files[3] +
+                        ", numRecords = " + files[4] +
+                        ", license = " + files[5] +"]");
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                System.out.println("Can't close buffer. ");
+            }
+        }
 
         mainMenu();
     }

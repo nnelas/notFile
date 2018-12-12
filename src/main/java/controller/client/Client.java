@@ -30,7 +30,7 @@ public class Client extends Thread {
         while(true) {
             try {
                 Socket socket = serverSocket.accept();
-                System.out.println("Connected to controller.client at " + socket.getRemoteSocketAddress() + " with peer " + peer_id);
+                System.out.println("Connected client at " + socket.getRemoteSocketAddress() + " with peer " + peer_id);
                 new Search(socket, FilesDir, peer_id, msg).start();
             } catch(IOException io) {
                 io.printStackTrace();
