@@ -1,10 +1,12 @@
 package controller.notFile;
 
+import model.DataSet;
 import utils.MessageFormat;
 
 import java.net.Socket;
 import java.io.IOException;
 import java.io.*;
+import java.util.ArrayList;
 
 import static utils.GlobalConfig.SERVER_NAME;
 
@@ -13,7 +15,7 @@ public class ConnectionThread extends Thread {
     private int portofconnection;
     private int peertoconnect;
     private String query;
-    private int[] peersArray;
+    private ArrayList<DataSet> peersFiles;
     private String msgid;
     private int frompeer_id;
     private int TTL_value;
@@ -41,7 +43,7 @@ public class ConnectionThread extends Thread {
             MessageFormat MF = new MessageFormat(query, msgid, frompeer_id, TTL_value);
             oos.writeObject(MF);
 
-            peersArray = (int[])ois.readObject();
+            peersFiles = (ArrayList<DataSet>)ois.readObject();
 
         } catch(IOException io) {
             io.printStackTrace();
@@ -50,8 +52,8 @@ public class ConnectionThread extends Thread {
         }
     }
 
-    public int[] getarray() {
-        return peersArray;
+    public ArrayList<DataSet> getarray() {
+        return peersFiles;
     }
 }
 

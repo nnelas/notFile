@@ -44,13 +44,13 @@ public class notFile {
         System.out.println("*****************");
         System.out.println("**** notFile ****");
         System.out.println("*****************");
-        System.out.println("");
-        System.out.println("Choose from these choices: ");
+        System.out.println("\nChoose from these choices: ");
         System.out.println("1 - Search for a File");
         System.out.println("1.1 - Download a File");
         System.out.println("2 - Insert a File");
         System.out.println("3 - List all my files");
         System.out.println("4 - Info\n");
+        System.out.println("0 - Quit\n");
 
         scanner = new Scanner(System.in);
         int choice = scanner.nextInt();
@@ -65,8 +65,10 @@ public class notFile {
                 System.out.println("> number of records (numRecords), ");
                 System.out.println("> license");
                 System.out.println("\n\nFor searching by one of these attributes, please query your input in this format: ");
-                System.out.println("\n\tduration>10, numParticipants=9, numRecords<9");
+                System.out.println("\n\tduration>10 or participantsType=Taxis or numRecords<9");
                 System.out.println("\nAny attribute that is not represented, will not be considered. ");
+                System.out.println("Search engine can only consider one attribute at a time. ");
+                System.out.println("White-spaces or tabs are not allowed. ");
                 scanner.nextLine();
                 String query = scanner.nextLine();
                 searchFile(query);
@@ -110,7 +112,7 @@ public class notFile {
                 systemInfo();
                 break;
             case 0:
-                // Perform "quit" case.
+                System.exit(0);
                 break;
             default:
 
@@ -141,12 +143,12 @@ public class notFile {
     }
 
 
-    private void searchFile (String fileToSearch){
+    private void searchFile (String query){
         ++count;
         String msgID = peerID + "." + count;
         String[] neighbours = properties.getProperty("peer" + peerID + ".next").split(","); 	//Creating a controller.client thread for every neighbouring peer
         int TTL_Value = neighbours.length;
-        System.out.println(fileToSearch);
+        System.out.println(query);
 
         ArrayList<Thread> thread = new ArrayList<Thread>();
         ArrayList<ConnectionThread> peers = new ArrayList<ConnectionThread>();		//To store all controller.client threads
@@ -155,7 +157,7 @@ public class notFile {
             int neighPort = Integer.parseInt(properties.getProperty("peer" + neighbour + ".port"));		// get neighbour port from config file
             int neighID = Integer.parseInt(neighbour);
 
-                ConnectionThread cp = new ConnectionThread(neighPort, neighID, fileToSearch, msgID, peerID, TTL_Value);
+                ConnectionThread cp = new ConnectionThread(neighPort, neighID, query, msgID, peerID, TTL_Value);
 
             Thread t = new Thread(cp);
             t.start();
@@ -168,61 +170,74 @@ public class notFile {
                 //Wait until all the controller.client threads are done executing
                 ((Thread) thread1).join();
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
 
-        int[] peerswithfiles; //part on how to send data from the ConnectingPeer
-        List<Integer> allPeersWithFile = new ArrayList<Integer>();
+        ArrayList<DataSet> peersFiles; //part on how to send data from the ConnectingPeer
+        ArrayList<DataSet> allPeersWithFile = new ArrayList<DataSet>();
 
         for (ConnectionThread peer : peers) {
 
             //Reading the list of controller.client threads which contains files
-            peerswithfiles = ((ConnectionThread) peer).getarray();
+            peersFiles = ((ConnectionThread) peer).getarray();
 
-            if (peerswithfiles.length > 0) {
-                for (int availablePeer : peerswithfiles) {
-                    if (availablePeer != 0) {
-                        allPeersWithFile.add(availablePeer);
+            if (!peersFiles.isEmpty()) {
+                for (DataSet dataSet : peersFiles) {
+                    if (!dataSet.getOwner().equals("Peer" + peerID)) {
+                        allPeersWithFile.add(dataSet);
                     }
                 }
             }
         }
 
         if (!allPeersWithFile.isEmpty()) {
-            System.out.println("\nPeers containing the file are: ");
-            for (int availablePeers : allPeersWithFile) {
-                System.out.println("> " + availablePeers);
+            System.out.println("\nFound this: ");
+            for (DataSet dataSet : allPeersWithFile) {
+                System.out.println("> From " + dataSet.getOwner());
+                System.out.println("\t> name: " + dataSet.getName());
+                System.out.println("\t> duration: " + dataSet.getDuration());
+                System.out.println("\t> number of participants (numParticipants): " + dataSet.getNumParticipants());
+                System.out.println("\t> participants type (participantsType): " + dataSet.getParticipantsType());
+                System.out.println("\t> number of records (numRecords): " + dataSet.getNumRecords());
+                System.out.println("\t> license: " + dataSet.getLicense());
             }
 
-            downloadFile(fileToSearch);
+            for (DataSet dataSet : allPeersWithFile) {
+                System.out.println("\n> From " + dataSet.getOwner());
+                System.out.println("\t> name: " + dataSet.getName());
+                System.out.println("Do you wish to download this DataSet? (y/N/q)");
+                String ans = scanner.nextLine();
+
+                if (ans.equalsIgnoreCase("y")) {
+                    downloadFile(dataSet);
+                }
+
+                if(ans.equals("q")) {
+                    break;
+                }
+            }
         } else {
-            System.out.println("No one has this file. Sorry. ");
-            mainMenu();
-        }
-    }
-
-    private void downloadFile (String filename){
-        System.out.println("\nDo you wish to download this file? (y/N)");
-        String ans = scanner.nextLine();
-        if (ans.equalsIgnoreCase("y")) {
-            System.out.println("Please selected a source: ");
-
-            int peerFrom = scanner.nextInt();
-            int portFrom = Integer.parseInt(properties.getProperty("peer" + peerFrom + ".serverport"));
-
-            Receiver receiver = new Receiver(portFrom, filename, filesDir);
-            receiver.run();
+            System.out.println("No one has this type of DataSet. Sorry. ");
         }
 
         mainMenu();
     }
 
+    private void downloadFile (DataSet dataSet){
+        int portFrom = Integer.parseInt(properties.getProperty("peer" + Integer.parseInt(dataSet.getOwner().replaceAll("Peer", "")) + ".serverport"));
+
+        Receiver receiver = new Receiver(portFrom, dataSet.getName(), filesDir);
+        receiver.run();
+
+        // after completed download, it will add new file to list
+        insertFile(peerID, dataSet.getName(), dataSet.getDuration(), dataSet.getNumParticipants(), dataSet.getParticipantsType(), dataSet.getNumRecords(), dataSet.getLicense());
+    }
+
     private void insertFile (int peerID, String filename, int dataSetDuration, int numParticipants, String participantsType, int numRecords, String license){
         // TODO: check if all arguments are valid before creating new dataset
 
-        DataSet dataSet = new DataSet(filename, dataSetDuration, numParticipants, participantsType, numRecords, license);
+        DataSet dataSet = new DataSet("Peer" + peerID, filename, dataSetDuration, numParticipants, participantsType, numRecords, license);
         InsertFile insertFile = new InsertFile(peerID, dataSet);
         insertFile.run();
 

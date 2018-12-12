@@ -1,7 +1,10 @@
 package model;
 
-public class DataSet {
+import java.io.Serializable;
 
+public class DataSet implements Serializable {
+
+    private String owner;
     private String name;
     private int duration;
     private int numParticipants;
@@ -9,13 +12,18 @@ public class DataSet {
     private int numRecords;
     private String license;
 
-    public DataSet(String name, int duration, int numParticipants, String participantsType, int numRecords, String license) {
+    public DataSet(String owner, String name, int duration, int numParticipants, String participantsType, int numRecords, String license) {
+        this.owner = owner;
         this.name = name;
         this.duration = duration;
         this.numParticipants = numParticipants;
         this.participantsType = participantsType;
         this.numRecords = numRecords;
         this.license = license;
+    }
+
+    public String getOwner() {
+        return owner;
     }
 
     public String getName() {

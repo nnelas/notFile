@@ -22,9 +22,8 @@ public class Search extends Thread {
     private int peer_id;
     private ArrayList<String> peerMessages;
     private ArrayList<Thread> thread = new ArrayList<Thread>();
-    private ArrayList<ConnectionThread> peerswithfiles = new ArrayList<ConnectionThread>();
-    private int[] peersArray_list = new int[20];
-    private int countofpeers = 0;
+    private ArrayList<ConnectionThread> listOfConnectionThreads = new ArrayList<ConnectionThread>();
+    private ArrayList<DataSet> files;
 
     private InputStream is = null;
 
@@ -67,27 +66,11 @@ public class Search extends Thread {
                 System.out.println("Duplicated Message");
             }
 
-            oos.writeObject(peersArray_list);
+            oos.writeObject(files);
 
         } catch(Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private void searchFileLocally (String query) {
-        File newfind;
-        File directoryObj = new File(FileDirectory);
-        String[] filesList = directoryObj.list();
-        for (String s : filesList) {
-            newfind = new File(s);
-            if (newfind.getName().equals(query)) {
-                System.out.println("You have this file");
-                peersArray_list[countofpeers++] = peer_id;
-                break;
-            }
-        }
-
-        parseSearchRequest(query);
     }
 
     private void sendSearchRequestToNeighbours (MessageFormat MF, String query) {
@@ -118,7 +101,7 @@ public class Search extends Thread {
                     Thread t = new Thread(cp);
                     t.start();
                     thread.add(t);
-                    peerswithfiles.add(cp);
+                    listOfConnectionThreads.add(cp);
 
                 }
             }
@@ -127,61 +110,52 @@ public class Search extends Thread {
                 ((Thread) thread1).join();
             }
 
-            for (ConnectionThread peerswithfile : peerswithfiles) {
+            for (ConnectionThread peerswithfile : listOfConnectionThreads) {
 
-                int[] a = ((ConnectionThread) peerswithfile).getarray();
-                for (int i : a) {
-                    if (i == 0)
-                        break;
-
-                    peersArray_list[countofpeers++] = i;
-                }
+                ArrayList<DataSet> a = ((ConnectionThread) peerswithfile).getarray();
+                files.addAll(a);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void parseSearchRequest (String query) {
+    private void searchFileLocally (String query) {
         List<String> result = Arrays.asList(query.split("\\s*,\\s*"));
 
         for (String attribute : result) {
-            if (attribute.contains("name")) {
-                String[] name = parseEachAttribute(attribute);
-                checkIfAnyFilesChecksSearch(name);
-            } else if (attribute.contains("duration")) {
-                String[] duration = parseEachAttribute(attribute);
-                checkIfAnyFilesChecksSearch(duration);
-            } else if (attribute.contains("numParticipants")) {
-                String[] numParticipants = parseEachAttribute(attribute);
-                checkIfAnyFilesChecksSearch(numParticipants);
-            } else if (attribute.contains("participantsType")) {
-                String[] participantsType = parseEachAttribute(attribute);
-                checkIfAnyFilesChecksSearch(participantsType);
-            } else if (attribute.contains("numRecords")) {
-                String[] numRecords = parseEachAttribute(attribute);
-                checkIfAnyFilesChecksSearch(numRecords);
-            } else if (attribute.contains("license")) {
-                String[] license = parseEachAttribute(attribute);
-                checkIfAnyFilesChecksSearch(license);
+            if (attribute.toLowerCase().contains("name")) {
+                String[] name = parseSearchRequest(attribute);
+                checkIfAnyFileChecksSearch(name);
+            } else if (attribute.toLowerCase().contains("duration")) {
+                String[] duration = parseSearchRequest(attribute);
+                checkIfAnyFileChecksSearch(duration);
+            } else if (attribute.toLowerCase().contains("numparticipants")) {
+                String[] numParticipants = parseSearchRequest(attribute);
+                checkIfAnyFileChecksSearch(numParticipants);
+            } else if (attribute.toLowerCase().contains("participantstype")) {
+                String[] participantsType = parseSearchRequest(attribute);
+                checkIfAnyFileChecksSearch(participantsType);
+            } else if (attribute.toLowerCase().contains("numrecords")) {
+                String[] numRecords = parseSearchRequest(attribute);
+                checkIfAnyFileChecksSearch(numRecords);
+            } else if (attribute.toLowerCase().contains("license")) {
+                String[] license = parseSearchRequest(attribute);
+                checkIfAnyFileChecksSearch(license);
             }
         }
     }
 
-    private String[] parseEachAttribute (String attribute) {
-        String[] parts = attribute.split(String.format(WITH_DELIMITER, "(<|=|>)"));
-        System.out.println("Attr: " + parts[0]);
-        System.out.println("Op: " + parts[1]);
-        System.out.println("Opr: " + parts[2]);
-
-        return parts;
+    private String[] parseSearchRequest (String attribute) {
+        return attribute.split(String.format(WITH_DELIMITER, "(<|=|>)"));
     }
 
-    private void checkIfAnyFilesChecksSearch(String[] attributes) {
-        String[] files = null;
+    private void checkIfAnyFileChecksSearch(String[] attributes) {
+        files = new ArrayList<DataSet>();
+        String[] userFiles = null;
         File configFile = new File(CONFIG_FOLDER + "Peer" + peer_id + "//" + USER_FILES);
         BufferedReader reader = null;
-        String csvSplitBy = ",";
+        String csvSplitBy = ", ";
         String line = "";
 
         try {
@@ -189,11 +163,65 @@ public class Search extends Thread {
 
             while ((line = reader.readLine()) != null) {
                 // use comma as separator
-                files = line.split(csvSplitBy);
+                userFiles = line.split(csvSplitBy);
 
-                DataSet userDataSet = new DataSet(files[0], Integer.parseInt(files[1]), Integer.parseInt(files[2]), files[3], Integer.parseInt(files[4]), files[5]);
+                DataSet userDataSet = new DataSet(userFiles[0], userFiles[1], Integer.parseInt(userFiles[2]), Integer.parseInt(userFiles[3]), userFiles[4], Integer.parseInt(userFiles[5]), userFiles[6]);
 
-                //TODO: compare user's query with files that neighbours have
+                if (attributes[0].equalsIgnoreCase("name")){
+                    if (attributes[2].equalsIgnoreCase(userDataSet.getName())){
+                        files.add(userDataSet);
+                    }
+                } else if (attributes[0].equalsIgnoreCase("duration")){
+                    if (attributes[1].equals("<")){
+                        if (userDataSet.getDuration() < Integer.parseInt(attributes[2])){
+                            files.add(userDataSet);
+                        }
+                    } else if (attributes[1].equals("=")){
+                        if (userDataSet.getDuration() == Integer.parseInt(attributes[2])){
+                            files.add(userDataSet);
+                        }
+                    } else if (attributes[1].equals(">")){
+                        if (userDataSet.getDuration() > Integer.parseInt(attributes[2])){
+                            files.add(userDataSet);
+                        }
+                    }
+                } else if (attributes[0].equalsIgnoreCase("numParticipants")){
+                    if (attributes[1].equals("<")){
+                        if (userDataSet.getNumParticipants() < Integer.parseInt(attributes[2])){
+                            files.add(userDataSet);
+                        }
+                    } else if (attributes[1].equals("=")){
+                        if (userDataSet.getNumParticipants() == Integer.parseInt(attributes[2])){
+                            files.add(userDataSet);
+                        }
+                    } else if (attributes[1].equals(">")){
+                        if (userDataSet.getNumParticipants() > Integer.parseInt(attributes[2])){
+                            files.add(userDataSet);
+                        }
+                    }
+                } else if (attributes[0].equalsIgnoreCase("participantsType")){
+                    if (attributes[2].equalsIgnoreCase(userDataSet.getParticipantsType())){
+                        files.add(userDataSet);
+                    }
+                } else if (attributes[0].equalsIgnoreCase("numRecords")){
+                    if (attributes[1].equals("<")){
+                        if (userDataSet.getNumRecords() < Integer.parseInt(attributes[2])){
+                            files.add(userDataSet);
+                        }
+                    } else if (attributes[1].equals("=")){
+                        if (userDataSet.getNumRecords() == Integer.parseInt(attributes[2])){
+                            files.add(userDataSet);
+                        }
+                    } else if (attributes[1].equals(">")){
+                        if (userDataSet.getNumRecords() > Integer.parseInt(attributes[2])){
+                            files.add(userDataSet);
+                        }
+                    }
+                } else if (attributes[0].equalsIgnoreCase("license")){
+                    if (attributes[2].equalsIgnoreCase(userDataSet.getLicense())){
+                        files.add(userDataSet);
+                    }
+                }
             }
 
         } catch (FileNotFoundException e) {

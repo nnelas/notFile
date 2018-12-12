@@ -28,7 +28,7 @@ public class InsertFile extends Thread {
 
         try {
             writer = new FileWriter(directory + "//" + USER_FILES,true); //the true will append the new data
-            writer.write(dataSet.getName() + ", " + dataSet.getDuration() + ", " +
+            writer.write(dataSet.getOwner() + ", " + dataSet.getName() + ", " + dataSet.getDuration() + ", " +
                     dataSet.getNumParticipants() + ", " + dataSet.getParticipantsType()  + ", " +
                     dataSet.getNumRecords() + ", " + dataSet.getLicense());//appends the string to the file
             writer.write(System.getProperty("line.separator"));
