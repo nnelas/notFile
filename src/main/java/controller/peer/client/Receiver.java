@@ -1,4 +1,4 @@
-package controller.client;
+package controller.peer.client;
 
 import java.io.*;
 import java.net.Socket;
@@ -29,7 +29,7 @@ public class Receiver extends Thread {
         }
 
         try {
-            // send filename to controller.server
+            // send filename to controller.peer.server
             ObjectOutputStream ooos = new ObjectOutputStream(socket.getOutputStream());
             ooos.flush();
             ooos.writeObject(filename);

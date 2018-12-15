@@ -1,4 +1,4 @@
-package controller.server;
+package controller.peer.server;
 
 import java.io.*;
 import java.net.*;
@@ -20,13 +20,13 @@ public class Server extends Thread {
         try {
             serverSocket = new ServerSocket(portno);
         } catch(IOException io) {
-            System.out.println("Can't setup controller.server on this port number. ");
+            System.out.println("Can't setup controller.peer.server on this port number. ");
         }
 
         try {
             socket = serverSocket.accept();
         } catch(IOException io) {
-            System.out.println("Can't accept controller.client connection. ");
+            System.out.println("Can't accept controller.peer.client connection. ");
         }
 
         new Sender(socket, FileDirectory).start();

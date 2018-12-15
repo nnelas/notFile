@@ -1,4 +1,4 @@
-package controller.client;
+package controller.peer.client;
 
 import controller.notFile.ConnectionThread;
 import controller.notFile.notFile;
@@ -87,7 +87,7 @@ public class Search extends Thread {
 
                 for (String neighbour : neighbours) {
 
-                    //create controller.client thread for all neighbouring peers
+                    //create controller.peer.client thread for all neighbouring peers
                     if (MF.getFromPeerId() == Integer.parseInt(neighbour)) {
                         continue;
                     }

@@ -1,4 +1,4 @@
-package controller.client;
+package controller.peer.client;
 
 import model.DataSet;
 

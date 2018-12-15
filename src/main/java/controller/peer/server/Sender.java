@@ -1,4 +1,4 @@
-package controller.server;
+package controller.peer.server;
 
 import java.io.*;
 import java.net.Socket;
@@ -22,7 +22,7 @@ class Sender extends Thread {
         OutputStream out = null;
 
         try {
-            is = socket.getInputStream();            //Connecting controller.client.Client acting as a controller.server to the file requesting controller.client.Client
+            is = socket.getInputStream();            //Connecting controller.peer.client.Client acting as a controller.peer.server to the file requesting controller.peer.client.Client
             ois = new ObjectInputStream(is);
             filename = (String) ois.readObject();                    //Filename to be downloaded
         } catch (Exception ex){

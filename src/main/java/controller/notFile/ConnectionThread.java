@@ -39,7 +39,7 @@ public class ConnectionThread extends Thread {
             InputStream is = socket.getInputStream();
             ObjectInputStream ois = new ObjectInputStream(is);
 
-            //writing the data to be serialized and send to the controller.server thread
+            //writing the data to be serialized and send to the controller.peer.server thread
             MessageFormat MF = new MessageFormat(query, msgid, frompeer_id, TTL_value);
             oos.writeObject(MF);
 

@@ -1,4 +1,4 @@
-package controller.client;
+package controller.peer.client;
 
 import java.io.*;
 import java.net.*;
@@ -26,7 +26,7 @@ public class Client extends Thread {
             ie.printStackTrace();
         }
 
-        //Accept() to create controller.server socket for every request
+        //Accept() to create controller.peer.server socket for every request
         while(true) {
             try {
                 Socket socket = serverSocket.accept();

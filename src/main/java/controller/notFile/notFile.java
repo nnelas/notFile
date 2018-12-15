@@ -1,9 +1,9 @@
 package controller.notFile;
 
-import controller.client.Client;
-import controller.client.InsertFile;
-import controller.client.Receiver;
-import controller.server.Server;
+import controller.peer.client.Client;
+import controller.peer.client.InsertFile;
+import controller.peer.client.Receiver;
+import controller.peer.server.Server;
 import model.DataSet;
 import utils.GlobalConfig;
 
@@ -23,9 +23,12 @@ public class notFile {
     private String filesDir;
     private Scanner scanner;
 
-    public static void main(String[] args)  {
+    public static void main(String[] args) throws IOException {
 
         notFile notFile = new notFile();
+
+        Login login = new Login();
+        login.loginMenu();
 
         propertiesFile = args[0];
         notFile.peerID = Integer.parseInt(args[1]);
@@ -44,7 +47,7 @@ public class notFile {
         System.out.println("*****************");
         System.out.println("**** notFile ****");
         System.out.println("*****************");
-        System.out.println("\nChoose from these choices: ");
+        System.out.println("\nChoose from these options: ");
         System.out.println("1 - Search for a File");
         System.out.println("1.1 - Download a File");
         System.out.println("2 - Insert a File");
@@ -115,6 +118,8 @@ public class notFile {
                 System.exit(0);
                 break;
             default:
+                System.out.println("Invalid option. :(");
+                mainMenu();
 
         }
     }
@@ -127,12 +132,12 @@ public class notFile {
             InputStream is = new FileInputStream(propertiesFile);
             properties.load(is);
 
-            // get peer controller.server port and start controller.server
+            // get peer controller.peer.server port and start controller.peer.server
             int serverPort = Integer.parseInt(properties.getProperty("peer" + peerID + ".serverport"));
             Server server = new Server(serverPort, filesDir);
             server.start();
 
-            // get peer controller.client port and start controller.client
+            // get peer controller.peer.client port and start controller.peer.client
             int clientPort = Integer.parseInt(properties.getProperty("peer" + peerID + ".port"));
             Client client = new Client(clientPort, filesDir, peerID);
             client.start();
@@ -146,12 +151,12 @@ public class notFile {
     private void searchFile (String query){
         ++count;
         String msgID = peerID + "." + count;
-        String[] neighbours = properties.getProperty("peer" + peerID + ".next").split(","); 	//Creating a controller.client thread for every neighbouring peer
+        String[] neighbours = properties.getProperty("peer" + peerID + ".next").split(","); 	//Creating a controller.peer.client thread for every neighbouring peer
         int TTL_Value = neighbours.length;
         System.out.println(query);
 
         ArrayList<Thread> thread = new ArrayList<Thread>();
-        ArrayList<ConnectionThread> peers = new ArrayList<ConnectionThread>();		//To store all controller.client threads
+        ArrayList<ConnectionThread> peers = new ArrayList<ConnectionThread>();		//To store all controller.peer.client threads
 
         for(String neighbour : neighbours) {
             int neighPort = Integer.parseInt(properties.getProperty("peer" + neighbour + ".port"));		// get neighbour port from config file
@@ -167,7 +172,7 @@ public class notFile {
 
         for (Thread thread1 : thread) {
             try {
-                //Wait until all the controller.client threads are done executing
+                //Wait until all the controller.peer.client threads are done executing
                 ((Thread) thread1).join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -179,7 +184,7 @@ public class notFile {
 
         for (ConnectionThread peer : peers) {
 
-            //Reading the list of controller.client threads which contains files
+            //Reading the list of controller.peer.client threads which contains files
             peersFiles = ((ConnectionThread) peer).getarray();
 
             if (!peersFiles.isEmpty()) {
@@ -258,16 +263,14 @@ public class notFile {
                 // use comma as separator
                 files = line.split(csvSplitBy);
 
-                System.out.println("File [name = " + files[0] +
-                        ", duration = " + files[1] +
-                        ", numParticipants = " + files[2] +
-                        ", participantsType = " + files[3] +
-                        ", numRecords = " + files[4] +
-                        ", license = " + files[5] +"]");
+                System.out.println("File [name = " + files[1] +
+                        ", duration = " + files[2] +
+                        ", numParticipants = " + files[3] +
+                        ", participantsType = " + files[4] +
+                        ", numRecords = " + files[5] +
+                        ", license = " + files[6] +"]");
             }
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
