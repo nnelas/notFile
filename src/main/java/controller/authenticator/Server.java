@@ -2,6 +2,7 @@ package controller.authenticator;
 
 import model.Researcher;
 import model.Team;
+import org.apache.commons.codec.digest.DigestUtils;
 import utils.GlobalConfig;
 
 import java.io.*;
@@ -41,8 +42,6 @@ public class Server {
             new Authentication(socket).start();
         }
     }
-
-
 }
 
 class serverMenu extends Thread {
@@ -83,7 +82,7 @@ class serverMenu extends Thread {
                 password = scanner.nextLine();
                 System.out.println("\nPlease enter your team: ");
                 team = scanner.nextLine();
-                persist.registerUser(firstname, lastname, username, password, team);
+                persist.registerUser(firstname, lastname, username, hashPasswordString(password), team);
                 break;
             case 2:
                 System.out.println("\nPlease enter team name: ");
@@ -100,8 +99,12 @@ class serverMenu extends Thread {
             default:
                 System.out.println("Invalid option. :(");
         }
-
         serverMenu();
+    }
+
+    private String hashPasswordString (String password){
+        return DigestUtils.sha512Hex(password);
+
     }
 }
 
