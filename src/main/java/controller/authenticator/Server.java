@@ -1,10 +1,13 @@
 package controller.authenticator;
 
 import model.Researcher;
+import model.Team;
+import utils.GlobalConfig;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Scanner;
 
 import static utils.GlobalConfig.*;
 
@@ -30,6 +33,7 @@ public class Server {
         while (true) {
             try {
                 System.out.println("Ready to accept clients...");
+                new serverMenu().start();
                 socket = serverSocket.accept();
             } catch (IOException io) {
                 System.out.println("Can't accept client connection. ");
@@ -38,9 +42,70 @@ public class Server {
         }
     }
 
+
 }
 
-class Authentication extends Thread{
+class serverMenu extends Thread {
+
+    public void run (){
+        serverMenu();
+    }
+
+    private void serverMenu() {
+        String firstname;
+        String lastname;
+        String username;
+        String password;
+        String team;
+        Persist persist = new Persist();
+
+        GlobalConfig.clearConsole();
+
+        System.out.println("\nChoose from these options: ");
+        System.out.println("1 - Add User");
+        System.out.println("2 - Add Team");
+        System.out.println("3 - Add User to Team\n");
+        System.out.println("0 - Quit\n");
+
+        Scanner scanner = new Scanner(System.in);
+        int choice = scanner.nextInt();
+
+        switch (choice) {
+            case 1:
+                System.out.println("\nPlease enter your first name: ");
+                scanner.nextLine();
+                firstname = scanner.nextLine();
+                System.out.println("\nPlease enter your last name: ");
+                lastname = scanner.nextLine();
+                System.out.println("\nPlease enter your username: ");
+                username = scanner.nextLine();
+                System.out.println("\nPlease enter your password: ");
+                password = scanner.nextLine();
+                System.out.println("\nPlease enter your team: ");
+                team = scanner.nextLine();
+                persist.registerUser(firstname, lastname, username, password, team);
+                break;
+            case 2:
+                System.out.println("\nPlease enter team name: ");
+                scanner.nextLine();
+                team = scanner.nextLine();
+                persist.persistTeam(new Team(persist.getID(TABLE_TEAMS), team));
+                break;
+            case 3:
+                //System.out.println("\nPlease enter team id: ");
+                //scanner.nextLine();
+                //team = scanner.nextLine();
+                //persist.persistTeam(new Team(persist.getID(TABLE_TEAMS), team));
+                break;
+            default:
+                System.out.println("Invalid option. :(");
+        }
+
+        serverMenu();
+    }
+}
+
+class Authentication extends Thread {
 
     private Socket socket;
     private BufferedReader input;
@@ -71,6 +136,7 @@ class Authentication extends Thread{
         try {
             String username;
             String password;
+            Persist persist = new Persist();
 
             if(option.equals(USER_LOGIN)){
                 username = input.readLine();
@@ -94,7 +160,7 @@ class Authentication extends Thread{
                 password = input.readLine();
                 String team = input.readLine();
 
-                if (registerUser(firstname, lastname, username, password, team)) {
+                if (persist.registerUser(firstname, lastname, username, password, team)) {
                     output.println("User " + username + " successfully added to table! ");
                     System.out.println("User " + username + " added successfully to table! ");
                 } else {
@@ -152,16 +218,19 @@ class Authentication extends Thread{
 
         return isLoginValid;
     }
+}
 
-    private boolean registerUser(String firstname, String lastname, String username, String password, String team){
-        Researcher researcher = new Researcher(getID(), firstname, lastname, username, password, team);
+class Persist extends Thread {
+
+    boolean registerUser(String firstname, String lastname, String username, String password, String team){
+        Researcher researcher = new Researcher(getID(TABLE_USERS), firstname, lastname, username, password, team);
         return persistUser(researcher);
     }
 
     private boolean persistUser(Researcher researcher){
         boolean isUserPersisted = false;
         File directory = new File(CONFIG_FOLDER + "server");
-        if (!directory.exists()){
+        if (!directory.exists()) {
             directory.mkdir();
         }
 
@@ -179,26 +248,49 @@ class Authentication extends Thread{
         return isUserPersisted;
     }
 
-    private int getID() {
-        String[] userAttributes = null;
-        File tableUsers = new File(CONFIG_FOLDER + SERVER_CONFIG_FOLDER + TABLE_USERS);
+    void persistTeam(Team team){
+        File directory = new File(CONFIG_FOLDER + "server");
+        if (!directory.exists()){
+            directory.mkdir();
+        }
+
+        try {
+            System.out.println("Adding new team to table... ");
+            BufferedWriter writer = new BufferedWriter(new FileWriter(directory + "//" + TABLE_TEAMS, true));
+            writer.append(team.getTeam());
+            writer.write(System.getProperty("line.separator"));
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    int getID(String option) {
+        String[] attributes = null;
+        File table = null;
+
+        if (option.equalsIgnoreCase(TABLE_USERS)) {
+            table = new File(CONFIG_FOLDER + SERVER_CONFIG_FOLDER + TABLE_USERS);
+        } else if (option.equalsIgnoreCase(TABLE_TEAMS)) {
+            table = new File(CONFIG_FOLDER + SERVER_CONFIG_FOLDER + TABLE_TEAMS);
+        }
         BufferedReader reader = null;
         String csvSplitBy = ", ";
         String line = "";
         int lastID = 0;
 
         try {
-            reader = new BufferedReader(new FileReader(tableUsers));
+            reader = new BufferedReader(new FileReader(table));
 
             while ((line = reader.readLine()) != null) {
                 // use comma as separator
-                userAttributes = line.split(csvSplitBy);
+                attributes = line.split(csvSplitBy);
 
-                lastID = Integer.parseInt(userAttributes[0]);
+                lastID = Integer.parseInt(attributes[0]);
             }
 
         } catch (IOException e) {
-            System.out.println("Couldn't find users table. Creating new one... ");
+            System.out.println("Couldn't find table. Creating new one... ");
         } finally {
             try {
                 if (reader != null) {
