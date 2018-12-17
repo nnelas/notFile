@@ -4,6 +4,8 @@ import controller.peer.client.Client;
 import controller.peer.client.InsertFile;
 import controller.peer.client.Receiver;
 import controller.peer.server.Server;
+import controller.request.Listener;
+import controller.request.Requester;
 import model.DataSet;
 import utils.GlobalConfig;
 
@@ -11,8 +13,7 @@ import java.util.Properties;
 import java.io.*;
 import java.util.*;
 
-import static utils.GlobalConfig.CONFIG_FOLDER;
-import static utils.GlobalConfig.USER_FILES;
+import static utils.GlobalConfig.*;
 
 public class notFile {
 
@@ -22,8 +23,9 @@ public class notFile {
     private int peerID;
     private String filesDir;
     private Scanner scanner;
+    private Requester requester;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         notFile notFile = new notFile();
 
@@ -36,6 +38,7 @@ public class notFile {
 
         System.out.println("Peer " + notFile.peerID + " started with shared directory " + notFile.filesDir);
 
+        notFile.configurePubSub();
         notFile.configurePeer(notFile.peerID, propertiesFile, notFile.filesDir);
         notFile.mainMenu();
     }
@@ -48,11 +51,13 @@ public class notFile {
         System.out.println("**** notFile ****");
         System.out.println("*****************");
         System.out.println("\nChoose from these options: ");
-        System.out.println("1 - Search for a File");
-        System.out.println("1.1 - Download a File");
-        System.out.println("2 - Insert a File");
-        System.out.println("3 - List all my files");
-        System.out.println("4 - Info\n");
+        System.out.println("1 - Search for a DataSet");
+        System.out.println("1.1 - Download a DataSet");
+        System.out.println("2 - Insert a DataSet");
+        System.out.println("3 - Request a DataSet");
+        System.out.println("4 - Advertise a DataSet");
+        System.out.println("5 - List all my DataSets");
+        System.out.println("6 - Info\n");
         System.out.println("0 - Quit\n");
 
         scanner = new Scanner(System.in);
@@ -109,9 +114,44 @@ public class notFile {
                 }
                 break;
             case 3:
-                seeAllMyFiles();
+                System.out.println("\nYou can request a DataSet by: ");
+                System.out.println("> duration, ");
+                System.out.println("> number of participants (numParticipants), ");
+                System.out.println("> participants type (participantsType), ");
+                System.out.println("> number of records (numRecords), ");
+                System.out.println("> license");
+                System.out.println("\n\nFor searching by one of these attributes, please query your input in this format: ");
+                System.out.println("\n\tduration>10, participantsType=Taxis, numRecords<9");
+                System.out.println("\nAny attribute that is not represented, will not be considered. ");
+                System.out.println("White-spaces or tabs are not allowed. ");
+                scanner.nextLine();
+                String request = scanner.nextLine();
+                requestDataSet(request);
                 break;
             case 4:
+                System.out.println("\nInsert DataSet duration: ");
+                int dataSetDuration = scanner.nextInt();
+
+                System.out.println("\nInsert number of participants: ");
+                int numParticipants = scanner.nextInt();
+
+                System.out.println("\nInsert participants type (humans, trucks, taxis, ...): ");
+                scanner.nextLine();
+                String participantsType = scanner.nextLine();
+
+                System.out.println("\nInsert number of records: ");
+                int numRecords = scanner.nextInt();
+
+                System.out.println("\nInsert license (GPL, ...): ");
+                scanner.nextLine();
+                String license = scanner.nextLine();
+
+                advertiseDataSet(dataSetDuration, numParticipants, participantsType, numRecords, license);
+                break;
+            case 5:
+                seeAllMyFiles();
+                break;
+            case 6:
                 systemInfo();
                 break;
             case 0:
@@ -137,16 +177,50 @@ public class notFile {
             Server server = new Server(serverPort, filesDir);
             server.start();
 
+            System.out.println("ServerPeer service is running. ");
+
             // get peer controller.peer.client port and start controller.peer.client
             int clientPort = Integer.parseInt(properties.getProperty("peer" + peerID + ".port"));
             Client client = new Client(clientPort, filesDir, peerID);
             client.start();
+
+            System.out.println("ClientPeer service is running. ");
 
         } catch(IOException io) {
             io.printStackTrace();
         }
     }
 
+    private void configurePubSub(){
+        try {
+            requester = new Requester(peerID, SERVER_NAME, new Listener());
+
+            requester.subscribetoTopic(REQUEST_DATA_SET);
+            requester.subscribetoTopic(ALERT_REQUESTED_DATA_SET);
+            requester.subscribetoTopic(ADVERTISE_DATA_SET);
+            requester.subscribetoTopic(NOTIFY_INTERESTED_DATA_SET);
+
+            System.out.println("Publish/Subscribe service is running. ");
+        } catch (IOException ex) {
+            System.out.println("Can't start Publish/Subscribe service. ");
+        }
+    }
+
+    private void requestDataSet (String request) {
+        requester.publishToTopic(REQUEST_DATA_SET, "Peer" + peerID + " has requested a dataset with these attributes " + request);
+        System.out.println("\nRequest sent to all peers. ");
+        mainMenu();
+    }
+
+    private void advertiseDataSet (int dataSetDuration, int numParticipants, String participantsType, int numRecords, String license) {
+        requester.publishToTopic(ADVERTISE_DATA_SET, "Peer" + peerID + " has this dataset, with these attributes: dataSetDuration: " + dataSetDuration +
+                                                                                                                        ", numParticipants: " + numParticipants +
+                                                                                                                        ", participantsType: " + participantsType +
+                                                                                                                        ", numRecords: " + numRecords +
+                                                                                                                        ", license: " + license);
+        System.out.println("\nDataset advertised to all peers. ");
+        mainMenu();
+    }
 
     private void searchFile (String query){
         ++count;
@@ -297,3 +371,4 @@ public class notFile {
     }
 
 }
+

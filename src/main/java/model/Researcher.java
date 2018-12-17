@@ -1,6 +1,7 @@
 package model;
 
 import java.io.Serializable;
+
 public class Researcher implements Serializable {
 
     private int id;

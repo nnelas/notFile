@@ -1,5 +1,7 @@
 package controller.authenticator;
 
+import controller.request.Listener;
+import controller.request.Requester;
 import model.Researcher;
 import model.Team;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -20,10 +22,32 @@ public class Server {
     public static void main(String[] args) {
         System.out.println("\t> notFile Authenticator Server <");
         Server server = new Server();
+        server.configPubSub();
         server.configServer();
     }
 
+    private void configPubSub() {
+        try {
+            Requester sender = new Requester(0, SERVER_NAME, new Listener());
+            sender.createTopic(REQUEST_DATA_SET);
+            sender.createTopic(ALERT_REQUESTED_DATA_SET);
+            sender.createTopic(ADVERTISE_DATA_SET);
+            sender.createTopic(NOTIFY_INTERESTED_DATA_SET);
+
+            Requester receiver = new Requester(1000, SERVER_NAME, new Listener());
+            receiver.subscribetoTopic(REQUEST_DATA_SET);
+            receiver.subscribetoTopic(ALERT_REQUESTED_DATA_SET);
+            receiver.subscribetoTopic(ADVERTISE_DATA_SET);
+            receiver.subscribetoTopic(NOTIFY_INTERESTED_DATA_SET);
+
+            System.out.println("Publish/Subscribe service is running. ");
+        } catch (IOException ex) {
+            System.out.println("Can't setup publish/subscribe. ");
+        }
+    }
+
     private void configServer() {
+
         try {
             System.out.println("Creating socket...");
             serverSocket = new ServerSocket(SERVER_PORT);
@@ -182,7 +206,7 @@ class Authentication extends Thread {
     private boolean loginUser(String username, String password) {
         boolean isLoginValid = false;
         String[] userAttributes = null;
-        File tableUsers = new File(CONFIG_FOLDER + SERVER_CONFIG_FOLDER + TABLE_USERS);
+        File tableUsers = new File(CONFIG_FOLDER + SERVER_CONFIG_FOLDER + "//" + TABLE_USERS);
         BufferedReader reader = null;
         String csvSplitBy = ", ";
         String line = "";
@@ -273,9 +297,9 @@ class Persist extends Thread {
         File table = null;
 
         if (option.equalsIgnoreCase(TABLE_USERS)) {
-            table = new File(CONFIG_FOLDER + SERVER_CONFIG_FOLDER + TABLE_USERS);
+            table = new File(CONFIG_FOLDER + SERVER_CONFIG_FOLDER + "//" + TABLE_USERS);
         } else if (option.equalsIgnoreCase(TABLE_TEAMS)) {
-            table = new File(CONFIG_FOLDER + SERVER_CONFIG_FOLDER + TABLE_TEAMS);
+            table = new File(CONFIG_FOLDER + SERVER_CONFIG_FOLDER + "//" + TABLE_TEAMS);
         }
         BufferedReader reader = null;
         String csvSplitBy = ", ";
