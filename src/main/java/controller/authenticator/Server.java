@@ -87,7 +87,6 @@ class serverMenu extends Thread {
         System.out.println("\nChoose from these options: ");
         System.out.println("1 - Add User");
         System.out.println("2 - Add Team");
-        System.out.println("3 - Add User to Team\n");
         System.out.println("0 - Quit\n");
 
         Scanner scanner = new Scanner(System.in);
@@ -113,12 +112,6 @@ class serverMenu extends Thread {
                 scanner.nextLine();
                 team = scanner.nextLine();
                 persist.persistTeam(new Team(persist.getID(TABLE_TEAMS), team));
-                break;
-            case 3:
-                //System.out.println("\nPlease enter team id: ");
-                //scanner.nextLine();
-                //team = scanner.nextLine();
-                //persist.persistTeam(new Team(persist.getID(TABLE_TEAMS), team));
                 break;
             default:
                 System.out.println("Invalid option. :(");
