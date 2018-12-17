@@ -12,6 +12,7 @@ import utils.GlobalConfig;
 import java.util.Properties;
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static utils.GlobalConfig.*;
 
@@ -253,8 +254,8 @@ public class notFile {
             }
         }
 
-        ArrayList<DataSet> peersFiles; //part on how to send data from the ConnectingPeer
-        ArrayList<DataSet> allPeersWithFile = new ArrayList<DataSet>();
+        List<DataSet> peersFiles; //part on how to send data from the ConnectingPeer
+        List<DataSet> allPeersWithFile = new ArrayList<DataSet>();
 
         for (ConnectionThread peer : peers) {
 
@@ -289,7 +290,18 @@ public class notFile {
                 String ans = scanner.nextLine();
 
                 if (ans.equalsIgnoreCase("y")) {
-                    downloadFile(dataSet);
+                    if(allPeersWithFile.size() > 1)
+                        allPeersWithFile = verifiEqualDataSets(allPeersWithFile);
+
+                    List<Integer> portsFrom = new ArrayList<>();
+                    if(allPeersWithFile.size() == 0) {
+                        portsFrom.add(Integer.parseInt(properties.getProperty("peer" + Integer.parseInt(dataSet.getOwner().replaceAll("Peer", "")) + ".serverport")));
+                    }else {
+                        for (DataSet example : allPeersWithFile) {
+                            portsFrom.add(Integer.parseInt(properties.getProperty("peer" + Integer.parseInt(example.getOwner().replaceAll("Peer", "")) + ".serverport")));
+                        }
+                    }
+                    downloadFile(dataSet, portsFrom);
                 }
 
                 if(ans.equals("q")) {
@@ -303,10 +315,12 @@ public class notFile {
         mainMenu();
     }
 
-    private void downloadFile (DataSet dataSet){
-        int portFrom = Integer.parseInt(properties.getProperty("peer" + Integer.parseInt(dataSet.getOwner().replaceAll("Peer", "")) + ".serverport"));
+    private List<DataSet> verifiEqualDataSets(List<DataSet> allPeersWithFile) {
+        return allPeersWithFile.stream().filter(o -> Collections.frequency(allPeersWithFile, o) > 1 ).collect(Collectors.toList());
+    }
 
-        Receiver receiver = new Receiver(portFrom, dataSet.getName(), filesDir);
+    private void downloadFile (DataSet dataSet, List<Integer> portsFrom){
+        Receiver receiver = new Receiver(portsFrom, dataSet.getName(), filesDir);
         receiver.run();
 
         // after completed download, it will add new file to list
