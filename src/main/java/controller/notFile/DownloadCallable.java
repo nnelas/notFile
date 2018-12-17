@@ -51,14 +51,13 @@ public class DownloadCallable implements Callable<FileInfo> {
             in = socket.getInputStream();            //Connecting controller.client.Client acting as a controller.server to the file requesting controller.client.Client
             ois = new ObjectInputStream(in);
             fileInfo = (FileInfo) ois.readObject();
-
+        } catch (IOException ex) {
+            System.out.println("Can't get socket input stream. ");
+        }finally {
             ooos.close();
             socket.close();
             in.close();
             ois.close();
-
-        } catch (IOException ex) {
-            System.out.println("Can't get socket input stream. ");
         }
 
         return fileInfo;

@@ -2,6 +2,7 @@ package controller.peer.client;
 
 import controller.notFile.DownloadCallable;
 import model.FileInfo;
+import static utils.GlobalConfig.service;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -53,18 +54,20 @@ public class Receiver extends Thread {
         }
 
         try {
-
             System.out.println("\nReceiving... ");
             out.write(fileStream);
 
-            out.close();
-            in.close();
-            outputStream.close();
-
-            System.out.println("File was successfully received. ");
-
         } catch(IOException e) {
             System.out.println("Something went wrong. Can't receive file. ");
+        }finally {
+            try {
+                out.close();
+                in.close();
+                outputStream.close();
+                System.out.println("File was successfully received. ");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

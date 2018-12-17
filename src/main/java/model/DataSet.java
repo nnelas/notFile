@@ -68,14 +68,10 @@ public class DataSet implements Serializable {
         if (!(obj instanceof DataSet)) {
             return false;
         }
-        return Objects.equals(name, ((DataSet) obj).getName()) &&
-                Objects.equals(duration, ((DataSet) obj).getDuration()) &&
+        return Objects.equals(duration, ((DataSet) obj).getDuration()) &&
                 Objects.equals(numParticipants, ((DataSet) obj).getNumParticipants()) &&
                 Objects.equals(participantsType, ((DataSet) obj).getParticipantsType()) &&
                 Objects.equals(numRecords, ((DataSet) obj).getNumRecords()) &&
-                Objects.equals(license, ((DataSet) obj).getLicense()) &&
-                duration==((DataSet) obj).getDuration() &&
-                numParticipants==((DataSet) obj).numParticipants &&
-                numRecords==((DataSet) obj).numRecords;
+                Objects.equals(license, ((DataSet) obj).getLicense());
     }
 }

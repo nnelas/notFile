@@ -23,6 +23,8 @@ class Sender extends Thread {
         ObjectOutputStream oos = null;
         OutputStream out = null;
         FileInfo fileInfo = null;
+        File file = null;
+        RandomAccessFile raf = null;
 
         try {
             is = socket.getInputStream();            //Connecting controller.client.Client acting as a controller.server to the file requesting controller.client.Client
@@ -35,16 +37,14 @@ class Sender extends Thread {
 
         try {
             System.out.println("Preparing to send " + filename);
-            File file = new File(sharedDirectory + "//" + filename);
+            file = new File(sharedDirectory + "//" + filename);
             // Get the size of the file
             out = socket.getOutputStream();
             oos = new ObjectOutputStream(out);
 
             //only set part of in bytes
-            RandomAccessFile raf = new RandomAccessFile(file, "r");
+            raf = new RandomAccessFile(file, "r");
             int mySize = (int) file.length() / fileInfo.getTotalNumberOfPeers();
-            if(mySize < 0)
-                mySize = (int) (0xffffffffl + mySize);
             byte[] buffer = new byte[mySize];
             try {
                 raf.seek(fileInfo.getMyPart() * mySize);
@@ -52,25 +52,25 @@ class Sender extends Thread {
             } finally {
                 raf.close();
             }
-
-
             fileInfo.setFileData(buffer);
 
-            System.out.println("\nSending... ");
-
             oos.flush();
+            System.out.println("\nSending... ");
             oos.writeObject(fileInfo);
-
-            out.close();
-            socket.close();
-            ois.close();
-            oos.close();
-            is.close();
-
-            System.out.println("File was successfully sent. ");
 
         } catch(Exception e) {
             e.printStackTrace();
+        }finally {
+            try {
+                out.close();
+                socket.close();
+                ois.close();
+                oos.close();
+                is.close();
+                System.out.println("File was successfully sent. ");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
