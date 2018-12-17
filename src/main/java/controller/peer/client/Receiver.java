@@ -1,48 +1,51 @@
 package controller.peer.client;
 
-import java.io.*;
-import java.net.Socket;
+import controller.notFile.DownloadCallable;
+import model.FileInfo;
 
-import static utils.GlobalConfig.SERVER_NAME;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 public class Receiver extends Thread {
 
-    private int portFrom;
+    private List<Integer> portsFrom;
     private String filename;
     private String filesDir;
 
-    public Receiver(int portFrom, String filename, String filesDir) {
-        this.portFrom = portFrom;
+    public Receiver(List<Integer> portsFrom, String filename, String filesDir) {
+        this.portsFrom = portsFrom;
         this.filename = filename;
         this.filesDir = filesDir;
     }
 
     public void run() {
-        Socket socket = null;
-        InputStream in = null;
         OutputStream out = null;
+        InputStream in = null;
+        byte[] fileStream = null;
 
-        try {
-            socket = new Socket(SERVER_NAME, portFrom);
-        } catch (IOException ex) {
-            System.out.println("Can't setup socket on this port number. ");
+        List<Future> allFutures = new ArrayList<>();
+        for(int i = 0; i < portsFrom.size(); i++){
+            Future<FileInfo> future = service.submit(new DownloadCallable(new FileInfo(filename, portsFrom.get(i), portsFrom.size(), i)));
+            allFutures.add(future);
         }
 
-        try {
-            // send filename to controller.peer.server
-            ObjectOutputStream ooos = new ObjectOutputStream(socket.getOutputStream());
-            ooos.flush();
-            ooos.writeObject(filename);
-        } catch (IOException ex){
-            System.out.println("Can't send filename to peer. ");
+        //Esperar que todos os future acabem e juntar o conteudo para uma inputSteam
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
+        for(int i = 0; i < portsFrom.size(); i++){
+            Future<FileInfo> future = allFutures.get(i);
+            try {
+                outputStream.write(future.get().getFileData());
+            } catch (InterruptedException | ExecutionException | IOException e) {
+                e.printStackTrace();
+            }
         }
+        fileStream = outputStream.toByteArray();
+        in = new ByteArrayInputStream(fileStream);
 
-        try {
-            in = socket.getInputStream();
-        } catch (IOException ex) {
-            System.out.println("Can't get socket input stream. ");
-        }
-
+        //escreve o in para o ficheiro
         try {
             out = new FileOutputStream(filesDir + "//" + filename);
         } catch (FileNotFoundException ex) {
@@ -50,17 +53,15 @@ public class Receiver extends Thread {
         }
 
         try {
-            byte[] buffer = new byte[4096];
 
-            int count;
-            while ((count = in.read(buffer)) > 0) {
-                System.out.println("\nReceiving... ");
-                out.write(buffer, 0, count);
-            }
+            System.out.println("\nReceiving... ");
+            out.write(fileStream);
 
             out.close();
             in.close();
-            socket.close();
+            outputStream.close();
+
+            System.out.println("File was successfully received. ");
 
         } catch(IOException e) {
             System.out.println("Something went wrong. Can't receive file. ");

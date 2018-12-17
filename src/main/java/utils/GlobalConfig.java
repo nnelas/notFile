@@ -1,5 +1,8 @@
 package utils;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class GlobalConfig {
 
     public static final String SERVER_NAME = "localhost";
@@ -22,6 +25,8 @@ public class GlobalConfig {
     public static final String ALERT_REQUESTED_DATA_SET = "alert";
     public static final String ADVERTISE_DATA_SET = "advertise";
     public static final String NOTIFY_INTERESTED_DATA_SET = "notify";
+
+    public static final ExecutorService service = Executors.newFixedThreadPool(10);
 
     public static void clearConsole() {
         try {

@@ -1,6 +1,7 @@
 package model;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class DataSet implements Serializable {
 
@@ -48,5 +49,33 @@ public class DataSet implements Serializable {
 
     public String getLicense() {
         return license;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 31 * hash + ((name!=null) ? name.hashCode() : 0);
+        hash = 31 * hash + ((participantsType!=null) ? participantsType.hashCode() : 0);
+        hash = 31 * hash + ((license!=null) ? license.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof DataSet)) {
+            return false;
+        }
+        return Objects.equals(name, ((DataSet) obj).getName()) &&
+                Objects.equals(duration, ((DataSet) obj).getDuration()) &&
+                Objects.equals(numParticipants, ((DataSet) obj).getNumParticipants()) &&
+                Objects.equals(participantsType, ((DataSet) obj).getParticipantsType()) &&
+                Objects.equals(numRecords, ((DataSet) obj).getNumRecords()) &&
+                Objects.equals(license, ((DataSet) obj).getLicense()) &&
+                duration==((DataSet) obj).getDuration() &&
+                numParticipants==((DataSet) obj).numParticipants &&
+                numRecords==((DataSet) obj).numRecords;
     }
 }

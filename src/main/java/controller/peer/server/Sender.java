@@ -1,5 +1,7 @@
 package controller.peer.server;
 
+import model.FileInfo;
+
 import java.io.*;
 import java.net.Socket;
 
@@ -18,13 +20,15 @@ class Sender extends Thread {
 
         InputStream is = null;
         ObjectInputStream ois = null;
-        InputStream in = null;
+        ObjectOutputStream oos = null;
         OutputStream out = null;
+        FileInfo fileInfo = null;
 
         try {
-            is = socket.getInputStream();            //Connecting controller.peer.client.Client acting as a controller.peer.server to the file requesting controller.peer.client.Client
+            is = socket.getInputStream();            //Connecting controller.client.Client acting as a controller.server to the file requesting controller.client.Client
             ois = new ObjectInputStream(is);
-            filename = (String) ois.readObject();                    //Filename to be downloaded
+            fileInfo = (FileInfo) ois.readObject();                    //Filename to be downloaded
+            filename = fileInfo.getFileName();
         } catch (Exception ex){
             System.out.println("Can't receive filename. ");
         }
@@ -33,19 +37,35 @@ class Sender extends Thread {
             System.out.println("Preparing to send " + filename);
             File file = new File(sharedDirectory + "//" + filename);
             // Get the size of the file
-            byte[] buffer = new byte[4096];
-            in = new FileInputStream(file);
             out = socket.getOutputStream();
+            oos = new ObjectOutputStream(out);
 
-            int count;
-            while ((count = in.read(buffer)) > 0) {
-                System.out.println("\nSending... ");
-                out.write(buffer, 0, count);
+            //only set part of in bytes
+            RandomAccessFile raf = new RandomAccessFile(file, "r");
+            int mySize = (int) file.length() / fileInfo.getTotalNumberOfPeers();
+            if(mySize < 0)
+                mySize = (int) (0xffffffffl + mySize);
+            byte[] buffer = new byte[mySize];
+            try {
+                raf.seek(fileInfo.getMyPart() * mySize);
+                raf.readFully(buffer, 0, mySize);
+            } finally {
+                raf.close();
             }
 
+
+            fileInfo.setFileData(buffer);
+
+            System.out.println("\nSending... ");
+
+            oos.flush();
+            oos.writeObject(fileInfo);
+
             out.close();
-            in.close();
             socket.close();
+            ois.close();
+            oos.close();
+            is.close();
 
             System.out.println("File was successfully sent. ");
 
