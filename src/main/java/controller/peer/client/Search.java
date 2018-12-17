@@ -8,6 +8,8 @@ import utils.MessageFormat;
 
 import java.io.*;
 import java.net.Socket;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -157,9 +159,11 @@ public class Search extends Thread {
         BufferedReader reader = null;
         String csvSplitBy = ", ";
         String line = "";
+        File file = null;
 
         try {
             reader = new BufferedReader(new FileReader(configFile));
+            MessageDigest md5Digest = MessageDigest.getInstance("MD5");
 
             while ((line = reader.readLine()) != null) {
                 // use comma as separator
@@ -169,64 +173,86 @@ public class Search extends Thread {
 
                 if (attributes[0].equalsIgnoreCase("name")){
                     if (attributes[2].equalsIgnoreCase(userDataSet.getName())){
+                        file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                        userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                         files.add(userDataSet);
                     }
                 } else if (attributes[0].equalsIgnoreCase("duration")){
                     if (attributes[1].equals("<")){
                         if (userDataSet.getDuration() < Integer.parseInt(attributes[2])){
+                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     } else if (attributes[1].equals("=")){
                         if (userDataSet.getDuration() == Integer.parseInt(attributes[2])){
+                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     } else if (attributes[1].equals(">")){
                         if (userDataSet.getDuration() > Integer.parseInt(attributes[2])){
+                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     }
                 } else if (attributes[0].equalsIgnoreCase("numParticipants")){
                     if (attributes[1].equals("<")){
                         if (userDataSet.getNumParticipants() < Integer.parseInt(attributes[2])){
+                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     } else if (attributes[1].equals("=")){
                         if (userDataSet.getNumParticipants() == Integer.parseInt(attributes[2])){
+                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     } else if (attributes[1].equals(">")){
                         if (userDataSet.getNumParticipants() > Integer.parseInt(attributes[2])){
+                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     }
                 } else if (attributes[0].equalsIgnoreCase("participantsType")){
                     if (attributes[2].equalsIgnoreCase(userDataSet.getParticipantsType())){
+                        file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                        userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                         files.add(userDataSet);
                     }
                 } else if (attributes[0].equalsIgnoreCase("numRecords")){
                     if (attributes[1].equals("<")){
                         if (userDataSet.getNumRecords() < Integer.parseInt(attributes[2])){
+                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     } else if (attributes[1].equals("=")){
                         if (userDataSet.getNumRecords() == Integer.parseInt(attributes[2])){
+                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     } else if (attributes[1].equals(">")){
                         if (userDataSet.getNumRecords() > Integer.parseInt(attributes[2])){
+                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     }
                 } else if (attributes[0].equalsIgnoreCase("license")){
                     if (attributes[2].equalsIgnoreCase(userDataSet.getLicense())){
+                        file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                        userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                         files.add(userDataSet);
                     }
                 }
             }
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (NoSuchAlgorithmException | IOException e) {
             e.printStackTrace();
         } finally {
             try {
@@ -237,5 +263,37 @@ public class Search extends Thread {
                 System.out.println("Can't close buffer. ");
             }
         }
+    }
+
+    private static String getFileChecksum(MessageDigest digest, File file) throws IOException
+    {
+        //Get file input stream for reading the file content
+        FileInputStream fis = new FileInputStream(file);
+
+        //Create byte array to read data in chunks
+        byte[] byteArray = new byte[1024];
+        int bytesCount = 0;
+
+        //Read file data and update in message digest
+        while ((bytesCount = fis.read(byteArray)) != -1) {
+            digest.update(byteArray, 0, bytesCount);
+        };
+
+        //close the stream; We don't need it now.
+        fis.close();
+
+        //Get the hash's bytes
+        byte[] bytes = digest.digest();
+
+        //This bytes[] has bytes in decimal format;
+        //Convert it to hexadecimal format
+        StringBuilder sb = new StringBuilder();
+        for(int i=0; i< bytes.length ;i++)
+        {
+            sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+        }
+
+        //return complete hash
+        return sb.toString();
     }
 }

@@ -12,6 +12,7 @@ public class DataSet implements Serializable {
     private String participantsType;
     private int numRecords;
     private String license;
+    private String checkSum;
 
     public DataSet(String owner, String name, int duration, int numParticipants, String participantsType, int numRecords, String license) {
         this.owner = owner;
@@ -51,6 +52,14 @@ public class DataSet implements Serializable {
         return license;
     }
 
+    public String getCheckSum() {
+        return checkSum;
+    }
+
+    public void setCheckSum(String checkSum) {
+        this.checkSum = checkSum;
+    }
+
     @Override
     public int hashCode() {
         int hash = 7;
@@ -68,10 +77,6 @@ public class DataSet implements Serializable {
         if (!(obj instanceof DataSet)) {
             return false;
         }
-        return Objects.equals(duration, ((DataSet) obj).getDuration()) &&
-                Objects.equals(numParticipants, ((DataSet) obj).getNumParticipants()) &&
-                Objects.equals(participantsType, ((DataSet) obj).getParticipantsType()) &&
-                Objects.equals(numRecords, ((DataSet) obj).getNumRecords()) &&
-                Objects.equals(license, ((DataSet) obj).getLicense());
+        return Objects.equals(checkSum, ((DataSet) obj).getCheckSum());
     }
 }
