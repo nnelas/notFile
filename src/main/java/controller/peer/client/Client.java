@@ -19,6 +19,14 @@ public class Client extends Thread {
         msg = new ArrayList<String>();
     }
 
+    public int getPeer_id() {
+        return peer_id;
+    }
+
+    public String getFilesDir() {
+        return FilesDir;
+    }
+
     public void run() {
         try {
             serverSocket = new ServerSocket(port_no);
@@ -31,7 +39,7 @@ public class Client extends Thread {
             try {
                 Socket socket = serverSocket.accept();
                 System.out.println("Connected client at " + socket.getRemoteSocketAddress() + " with peer " + peer_id);
-                new Search(socket, FilesDir, peer_id, msg).start();
+                new Search(socket, FilesDir, this, msg).start();
             } catch(IOException io) {
                 io.printStackTrace();
             }

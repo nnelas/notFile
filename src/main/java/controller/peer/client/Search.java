@@ -21,7 +21,7 @@ public class Search extends Thread {
 
     private Socket socket;
     private String FileDirectory;
-    private int peer_id;
+    private Client client;
     private ArrayList<String> peerMessages;
     private ArrayList<Thread> thread = new ArrayList<Thread>();
     private ArrayList<ConnectionThread> listOfConnectionThreads = new ArrayList<ConnectionThread>();
@@ -30,10 +30,10 @@ public class Search extends Thread {
     private InputStream is = null;
 
 
-    Search(Socket socket, String FileDirectory, int peer_id, ArrayList<String> peerMessages) {
+    Search(Socket socket, String FileDirectory, Client client, ArrayList<String> peerMessages) {
         this.socket = socket;
         this.FileDirectory = FileDirectory;
-        this.peer_id = peer_id;
+        this.client = client;
         this.peerMessages = peerMessages;
     }
 
@@ -82,7 +82,7 @@ public class Search extends Thread {
             is = new FileInputStream(propertiesFile);
             properties.load(is);
 
-            String temp = properties.getProperty("peer" + peer_id + ".next");
+            String temp = properties.getProperty("peer" + client + ".next");
 
             if (temp != null && MF.getTTL_value() > 0) {
                 String[] neighbours = temp.split(",");
@@ -99,7 +99,7 @@ public class Search extends Thread {
 
                     int TTL_value = MF.getTTL_value();
                     System.out.println("You don't have this file. Sending the request to neighbour peer: " + neighbouringpeer);
-                    ConnectionThread cp = new ConnectionThread(connectingport, neighbouringpeer, query, MF.getMsgId(), peer_id, TTL_value--);
+                    ConnectionThread cp = new ConnectionThread(connectingport, neighbouringpeer, query, MF.getMsgId(), client.getPeer_id(), TTL_value--);
                     Thread t = new Thread(cp);
                     t.start();
                     thread.add(t);
@@ -155,7 +155,7 @@ public class Search extends Thread {
     private void checkIfAnyFileChecksSearch(String[] attributes) {
         files = new ArrayList<DataSet>();
         String[] userFiles = null;
-        File configFile = new File(CONFIG_FOLDER + "Peer" + peer_id + "//" + USER_FILES);
+        File configFile = new File(CONFIG_FOLDER + "Peer" + client + "//" + USER_FILES);
         BufferedReader reader = null;
         String csvSplitBy = ", ";
         String line = "";
@@ -173,26 +173,26 @@ public class Search extends Thread {
 
                 if (attributes[0].equalsIgnoreCase("name")){
                     if (attributes[2].equalsIgnoreCase(userDataSet.getName())){
-                        file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                        file = new File(client.getFilesDir() + "//" + userDataSet.getName());
                         userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                         files.add(userDataSet);
                     }
                 } else if (attributes[0].equalsIgnoreCase("duration")){
                     if (attributes[1].equals("<")){
                         if (userDataSet.getDuration() < Integer.parseInt(attributes[2])){
-                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            file = new File(client.getFilesDir() + "//" + userDataSet.getName());
                             userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     } else if (attributes[1].equals("=")){
                         if (userDataSet.getDuration() == Integer.parseInt(attributes[2])){
-                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            file = new File(client.getFilesDir() + "//" + userDataSet.getName());
                             userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     } else if (attributes[1].equals(">")){
                         if (userDataSet.getDuration() > Integer.parseInt(attributes[2])){
-                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            file = new File(client.getFilesDir() + "//" + userDataSet.getName());
                             userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
@@ -200,52 +200,52 @@ public class Search extends Thread {
                 } else if (attributes[0].equalsIgnoreCase("numParticipants")){
                     if (attributes[1].equals("<")){
                         if (userDataSet.getNumParticipants() < Integer.parseInt(attributes[2])){
-                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            file = new File(client.getFilesDir() + "//" + userDataSet.getName());
                             userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     } else if (attributes[1].equals("=")){
                         if (userDataSet.getNumParticipants() == Integer.parseInt(attributes[2])){
-                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            file = new File(client.getFilesDir() + "//" + userDataSet.getName());
                             userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     } else if (attributes[1].equals(">")){
                         if (userDataSet.getNumParticipants() > Integer.parseInt(attributes[2])){
-                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            file = new File(client.getFilesDir() + "//" + userDataSet.getName());
                             userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     }
                 } else if (attributes[0].equalsIgnoreCase("participantsType")){
                     if (attributes[2].equalsIgnoreCase(userDataSet.getParticipantsType())){
-                        file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                        file = new File(client.getFilesDir() + "//" + userDataSet.getName());
                         userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                         files.add(userDataSet);
                     }
                 } else if (attributes[0].equalsIgnoreCase("numRecords")){
                     if (attributes[1].equals("<")){
                         if (userDataSet.getNumRecords() < Integer.parseInt(attributes[2])){
-                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            file = new File(client.getFilesDir() + "//" + userDataSet.getName());
                             userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     } else if (attributes[1].equals("=")){
                         if (userDataSet.getNumRecords() == Integer.parseInt(attributes[2])){
-                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            file = new File(client.getFilesDir() + "//" + userDataSet.getName());
                             userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     } else if (attributes[1].equals(">")){
                         if (userDataSet.getNumRecords() > Integer.parseInt(attributes[2])){
-                            file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                            file = new File(client.getFilesDir() + "//" + userDataSet.getName());
                             userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                             files.add(userDataSet);
                         }
                     }
                 } else if (attributes[0].equalsIgnoreCase("license")){
                     if (attributes[2].equalsIgnoreCase(userDataSet.getLicense())){
-                        file = new File("sharedDirectory" + "//" + userDataSet.getName());
+                        file = new File(client.getFilesDir() + "//" + userDataSet.getName());
                         userDataSet.setCheckSum(getFileChecksum(md5Digest, file));
                         files.add(userDataSet);
                     }
