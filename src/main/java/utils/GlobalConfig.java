@@ -12,11 +12,12 @@ public class GlobalConfig {
     public static final String SERVER_CONFIG_FOLDER = "server";
     public static final String TABLE_USERS = "table-users";
     public static final String TABLE_TEAMS = "table-teams";
-    public static final int SERVER_PORT = 9000;
+    public static final int AUTH_SERVER_PORT = 9000;
 
     public static final String USER_LOGIN = "login";
     public static final String USER_REGISTER = "register";
 
+    public static final int PUBSUB_PORT = 7000;
     public static final String REQUEST_DATA_SET = "request";
     public static final String ALERT_REQUESTED_DATA_SET = "alert";
     public static final String ADVERTISE_DATA_SET = "advertise";

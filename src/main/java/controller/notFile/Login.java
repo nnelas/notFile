@@ -71,7 +71,7 @@ class Login {
     private boolean connectToServer(){
         boolean isConnected;
         try {
-            socket = new Socket(SERVER_NAME, SERVER_PORT);
+            socket = new Socket(SERVER_NAME, AUTH_SERVER_PORT);
             output = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
             read = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 

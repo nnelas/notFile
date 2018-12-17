@@ -1,2 +1,3 @@
 20181217  01:26:06: Peer4 has this dataset, with these attributes: dataSetDuration: 1000, numParticipants: 90, participantsType: Humans, numRecords: 99999, license: GPL
 20181217  01:28:30: Peer4 has requested a dataset with these attributes duration>10, participantsType=Taxis, numRecords<9
+20181217  02:20:01: Peer4 has requested a dataset with these attributes duration>90, numRecords>900

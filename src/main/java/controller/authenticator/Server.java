@@ -50,7 +50,7 @@ public class Server {
 
         try {
             System.out.println("Creating socket...");
-            serverSocket = new ServerSocket(SERVER_PORT);
+            serverSocket = new ServerSocket(AUTH_SERVER_PORT);
         } catch (IOException io) {
             System.out.println("Can't setup server on this port number. ");
         }
@@ -138,7 +138,7 @@ class Authentication extends Thread {
     }
 
     public void run(){
-        System.out.println("New client at " + socket.getLocalAddress());
+        System.out.println("New client at " + socket.getRemoteSocketAddress());
 
         try {
             input = new BufferedReader(new InputStreamReader(socket.getInputStream()));

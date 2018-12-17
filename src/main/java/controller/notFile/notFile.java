@@ -327,7 +327,7 @@ public class notFile {
         String[] files = null;
         File file = new File(CONFIG_FOLDER + "Peer" + peerID + "//" + USER_FILES);
         BufferedReader reader = null;
-        String csvSplitBy = ",";
+        String csvSplitBy = ", ";
         String line = "";
 
         try {
